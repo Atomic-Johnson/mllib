@@ -98,9 +98,26 @@ class DTPurityFucntions:
     GINI_INDEX = getGiniIndex
 
 class DecisionTree:
-    """Class method to create DecisionTree .
+    """Class method to represent a Decision Tree.
+
+        Methods
+        -------
+        getLabel(test_data: dict):
+            returns the label predicted by the decision tree.
+
     """
+
     def __init__(self, training_data: DataFrame, label_column:str, schema: dict = None, max_depth: Number = 90, purity_func: Callable[[DataFrame, str], float] = getEntropy):
+        """Initialize A decision tree object. 
+
+        Args:
+            training_data (DataFrame): The data that will be used to make this tree. Must have header that matches keys in schema. Numeric columns must have numeric tyoe data.
+            label_column (str): The column in training_data that has the output labels
+            schema (dict, optional): a dictionary where each key is a column in training_data and corresponds to a list of possible values for that column. Defaults to None.
+            max_depth (Number, optional): the maximum depth of this tree. Defaults to 90.
+            purity_func (Callable[[DataFrame, str], float], optional): The function that will be used to calculate purity for the information gain 
+            (Use getEntropy, getMajorityError, or getGiniIndex contained in decisionTree.py). Defaults to getEntropy.
+        """
         self.schema: DataFrame = schema
         self.label_column: str = label_column
         self.max_depth: numeric = max_depth
@@ -109,10 +126,30 @@ class DecisionTree:
         self.root = node(training_data, max_depth, self)
 
     def getLabel(self, test_data: dict):
+        """Get the predicted label from the decision tree for test_data
+            recursively calls get_label on this tree's root node
+
+        Args:
+            test_data (dict): a dictionary corresponding to a single row
+            in a dataset. The keys must be the same as the column names
+            in the training_data DataFrame for this tree. To get such a 
+            dictionary from a DataFrame, you can use DataFrame.to_dict()
+
+        Returns:
+            The predicted label
+        """
         return self.root.getLabel(test_data)
+
 
 class node:
         def __init__(self, training_data: DataFrame, max_depth: Number, dt: DecisionTree):
+            """Method to create a node from training data. 
+
+            Args:
+                training_data (DataFrame): 
+                max_depth (Number): 
+                dt (DecisionTree): The decision tree that contains the root node and other important constants.
+            """
             # step 1: should this be a leaf node?
             self.is_leaf = False
             if training_data[dt.label_column].unique().shape[0] == 1 or max_depth == 0 or training_data.shape[1] == 1:
@@ -156,14 +193,20 @@ class node:
                 child_frame = training_data.loc[training_data[self.best_attribute] > self.medianSplit].drop(self.best_attribute, axis=1)
                 if child_frame.shape[0] != 0:
                     self.children["gt"] = node(child_frame, max_depth -1, dt)
+                else: #leaf node
+                    self.children["gt"] = node(training_data, 0, dt)
 
                 child_frame = training_data.loc[(training_data[self.best_attribute] <= self.medianSplit) & (training_data[self.best_attribute] != -1)].drop(self.best_attribute, axis=1)
                 if child_frame.shape[0] != 0:
                     self.children["lt"] = node(child_frame, max_depth -1, dt)
+                else: #leaf node
+                    self.children["lt"] = node(training_data, 0, dt)
 
                 child_frame = training_data.loc[training_data[self.best_attribute] == -1]
                 if child_frame.shape[0] != 0:
                     self.children["neg"] = node(child_frame, max_depth -1, dt)
+                else: #leaf node
+                    self.children["neg"] = node(training_data, 0, dt)
 
             else:
                 self.isNumeric = False
@@ -186,17 +229,14 @@ class node:
                 return self.label
 
             if self.isNumeric:
-                if test_data[self.best_attribute] == -1 and "neg" in test_data.keys():
+                if test_data[self.best_attribute] == -1:
                     return self.children["neg"].getLabel(test_data)
 
-                if test_data[self.best_attribute] > self.medianSplit and "gt" in test_data.keys():
+                if test_data[self.best_attribute] > self.medianSplit:
                     return self.children["gt"].getLabel(test_data)
                 else:
-                    if "lt" in test_data.keys():
-                        return self.children["lt"].getLabel(test_data)
-                    elif "neg" in test_data.keys():
-                        return self.children["neg"].getLabel(test_data)
-                return 'yes'
+                    return self.children["lt"].getLabel(test_data)
+                print("WARNING: numeric data did not go to numeric node")
             # get the value for this attribute
             value = test_data[self.best_attribute]
             return self.children[value].getLabel(test_data)
