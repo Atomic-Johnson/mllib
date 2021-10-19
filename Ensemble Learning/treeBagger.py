@@ -1,24 +1,24 @@
 from typing import List
-import numpy
-from ..DecisionTree import decisionTree as dt
+from decisionTree import DecisionTree
 import pandas as df
 import math as m
 import numpy as np
 from pandas.core.frame import DataFrame
 
-class baggedTree:
+class BaggedTree:
 
     def add_iteration(self):
-        bootstrap = self.training_data.sample(len(self.training_data), replace=True)
-        self.trees.append(dt.DecisionTree(bootstrap, self.output_column, self.schema))
+        bootstrap = self.training_data.sample(self.sample_size, replace=True)
+        self.trees.append(DecisionTree(bootstrap, self.output_column, self.schema))
         self.T = self.T + 1
         
     def __init__(self, training_data: DataFrame, T, output_column: str, schema: dict):
         self.T = 0
+        self.sample_size = len(training_data)
         self.output_column = output_column
         self.schema = schema
         self.training_data: DataFrame = training_data
-        self.trees = []
+        self.trees:List[DecisionTree] = []
 
         for i in range(0, T):
             self.add_iteration()

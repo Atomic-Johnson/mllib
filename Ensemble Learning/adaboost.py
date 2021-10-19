@@ -1,6 +1,6 @@
 from typing import List
 import numpy
-from ..DecisionTree import decisionTree as dt
+from decisionTree import DecisionTree
 import pandas as df
 import math as m
 import numpy as np
@@ -8,10 +8,10 @@ from pandas.core.frame import DataFrame
 
 MAX_TREE_DEPTH = 2
 WEIGHTS = 'weights'
-DEBUG = True
+DEBUG = False
 
 class boostedTree:
-    def __getError(self, tree: dt.DecisionTree):
+    def __getError(self, tree: DecisionTree):
         total = len(self.training_data)
         sum = 0.0
 
@@ -22,17 +22,22 @@ class boostedTree:
 
     def add_iteration(self):
         #step one build a new tree
-        temp_tree = dt.DecisionTree(self.training_data, self.output_column, self.schema, MAX_TREE_DEPTH)
+        temp_tree = DecisionTree(self.training_data, self.output_column, self.schema, MAX_TREE_DEPTH)
 
         #step 2 get error and alpha
         Et = self.__getError(temp_tree)
         alpha = 0.5 *  m.log((1-Et) / Et)
         
         #step 3 update weights
+        self.Zt = 0
         for i, row in self.training_data.iterrows():
             Dt = row[WEIGHTS]
-            self.training_data.iloc(i)[WEIGHTS] = Dt/self.Zt * \
-                m.exp(-1 * alpha * temp_tree.getLabel(row.to_dict) * row[self.output_column])
+            Dt1 =  Dt * m.exp(-1 * alpha * temp_tree.getLabel(row.to_dict()) * row[self.output_column])
+            self.training_data.at[i, WEIGHTS] = Dt1
+            self.Zt = self.Zt + Dt1
+
+        self.training_data[WEIGHTS] = self.training_data[WEIGHTS].div(self.Zt)
+
 
         #step 4 add new tree and alpha to list
         self.alphas.append(alpha)
@@ -41,7 +46,7 @@ class boostedTree:
 
         if DEBUG:
             if self.training_data[WEIGHTS].sum() != 1:
-                print("ERROR: weights did not add up to one")
+                print("ERROR: weights did not add up to one " + str(self.training_data[WEIGHTS].sum()))
     
     def __init__(self, training_data: DataFrame, T, output_column: str, schema: dict):
         self.T = 0
@@ -63,7 +68,7 @@ class boostedTree:
         
 
         self.training_data = training_data
-        self.trees: List(dt.DecisionTree) = []
+        self.trees: List(DecisionTree) = []
 
         for i in range(0,T):
             self.add_iteration()
@@ -71,8 +76,8 @@ class boostedTree:
 
     def getLabel(self, test_data: dict):
         average_label = 0.0
-        for i, tree in self.trees:
-            average_label = average_label + self.alphas[i] * tree.getLabel(test_data)
+        for alpha, tree in zip(self.alphas,self.trees):
+            average_label = average_label + alpha * tree.getLabel(test_data)
 
         if average_label >= 0:
             return 1

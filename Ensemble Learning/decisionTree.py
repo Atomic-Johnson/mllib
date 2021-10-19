@@ -129,7 +129,7 @@ class DTPurityFucntions:
     ENTROPY = getEntropy
     GINI_INDEX = getGiniIndex
 
-class RandomDecisionTree:
+class DecisionTree:
     """Class method to represent a Decision Tree.
 
         Methods
@@ -179,17 +179,16 @@ class RandomDecisionTree:
 
 
 class node:
-        def __init__(self, training_data: DataFrame, max_depth: Number, dt: RandomDecisionTree):
-            """Method to create a node from training data. This has been altered to use random forest learning.
+        def __init__(self, training_data: DataFrame, max_depth: Number, dt: DecisionTree):
+            """Method to create a node from training data. 
 
             Args:
                 training_data (DataFrame): 
                 max_depth (Number): 
                 dt (DecisionTree): The decision tree that contains the root node and other important constants.
             """
-            
-
             # step 1: should this be a leaf node?
+            
             unique_labels = training_data[dt.label_column].unique()
             if len(unique_labels) == 1 or max_depth == 0 or training_data.shape[1] == 1:
                 self.is_leaf = True
@@ -212,17 +211,13 @@ class node:
                 self.is_leaf = False
 
             # step 2: Determine which node to use to split
-            randomSelection = training_data.sample(frac=0.1, replace=False, axis='columns')
-            if randomSelection.isnull():
-                randomSelection = training_data.sample(frac=0.1, replace=False, axis='columns')
-                
             max_gain = -1
             
-            for  attribute in randomSelection.columns:
+            for attribute in training_data.columns:
                 if attribute == dt.label_column or attribute == "weights":
                     continue
 
-                gain = getInfoGain(randomSelection, attribute, dt.label_column, dt.is_weighted, dt.purity_func)
+                gain = getInfoGain(training_data, attribute, dt.label_column, dt.is_weighted, dt.purity_func)
                 if gain > max_gain:
                     max_gain = gain
                     self.best_attribute = attribute
@@ -286,6 +281,6 @@ class node:
             value = test_data[self.best_attribute]
             return self.children[value].getLabel(test_data)
 
-class RandomForest:
-    def __init__(self, training_data: DataFrame, T, output_column: str, schema: dict) -> None:
-        self.T = 0
+
+
+
