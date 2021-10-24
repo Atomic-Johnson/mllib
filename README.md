@@ -14,8 +14,9 @@ This decision tree algorithm comes with no warranty implicit or otherwise and sh
 important deicions regarding your career, dating life, or education.
 
 Here is the docstring and method for the decision tree constructor:
+"""
 def __init__(self, training_data: DataFrame, label_column:str, schema: dict = None, max_depth: Number = 90, purity_func: Callable[[DataFrame, str, bool], float] = getEntropy):
-        """Initialize A decision tree object. 
+        Initialize A decision tree object. 
 
         Args:
             training_data (DataFrame): The data that will be used to make this tree. Must have header that matches keys in schema. Numeric columns must have numeric tyoe data.
@@ -26,8 +27,9 @@ def __init__(self, training_data: DataFrame, label_column:str, schema: dict = No
             (Use getEntropy, getMajorityError, or getGiniIndex contained in decisionTree.py). Defaults to getEntropy.
         """
 once the tree is constructed, you can get a prediction from it by calling getLabel
+"""
 def getLabel(self, test_data: dict):
-        """Get the predicted label from the decision tree for test_data
+        Get the predicted label from the decision tree for test_data
             recursively calls get_label on this tree's root node
 
         Args:
