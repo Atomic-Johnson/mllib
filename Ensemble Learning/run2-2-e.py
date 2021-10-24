@@ -5,13 +5,14 @@ import pandas as df
 import multiprocessing as mp
 import numpy as np
 from pandas.core.frame import DataFrame
-from treeBaggerMultiProc import BaggedTree
+from randomForest import RandomForest
+from datetime import datetime
 
 # for arguments this expects bagRunner.py <startSize> <endSize> <outputFile.csv>
 # example: $ python bagRunner.py 1 350 bag1.csv
 def getErrors(dt, test_set: DataFrame, label_column: str, T:int):
     fail_counts = np.zeros(T)
-    for i, row in test_set.iterrows():
+    for j, row in test_set.iterrows():
         row_dict = row.to_dict()
         predictions:List = dt.getLabelsUpToT(row_dict,T)
 
@@ -22,15 +23,6 @@ def getErrors(dt, test_set: DataFrame, label_column: str, T:int):
     return fail_counts / len(test_set)
 
 if __name__ == '__main__':
-
-    if len(sys.argv) == 4:
-        startSize = int(sys.argv[1])
-        endSize = int(sys.argv[2])
-        outFile = sys.argv[3]
-    else:
-        startSize = 1
-        endSize = 20
-        outFile = "fullBagOutput.csv"
 
     print(os.getcwd())
 
@@ -68,27 +60,44 @@ if __name__ == '__main__':
             "poutcome":["unknown","other","failure","success"], \
             "y": ["yes", "no"]}
 
-    iteration_results = df.DataFrame(columns=["iteration", "train error", "test error"],dtype=float)
+    print("started making trees at: ", datetime.now().time())
+    tree_bags = []
+    single_trees = []
+    for i in range(100):
+        bag_sample = bank_frame_train.sample(1000, replace=False)
+        treebag = RandomForest(bag_sample, 500, 2, 'y', bank_schema)
+        tree_bags.append(treebag)
+        single_trees.append(treebag.trees[0])
 
-    # The adaboost algorithm assumes output of -1 or 1
-    bank_frame_train["y"] = bank_frame_train["y"].replace("no", -1)
-    bank_frame_train["y"] = bank_frame_train["y"].replace("yes", 1)
-    bank_frame_test["y"] = bank_frame_train["y"].replace("no", -1)
-    bank_frame_test["y"] = bank_frame_train["y"].replace("yes", 1)
+    print("finished making trees at: ", datetime.now().time())
+    predictions_array = np.zeros(100)
+    bias_terms = np.zeros(len(bank_frame_test))
+    variances = np.zeros(len(bank_frame_test))
+    for i, test in bank_frame_test.iterrows():
+        test_dict = test.to_dict()
 
-    print("Training the tree bagging")
-    bag_of_trees = BaggedTree(bank_frame_train, endSize, 'y', bank_schema)
-    print("Finished training. getting error info")
+        for j, tree in zip(range(100), single_trees):
+            predictions_array[j] = tree.getLabel(test_dict)
 
-    np_train_errors = getErrors(bag_of_trees, bank_frame_train, 'y', endSize)
-    np_test_errors = getErrors(bag_of_trees, bank_frame_test, 'y', endSize)
+        mean_prediction:float = predictions_array.mean()
+        bias_terms[i] = (mean_prediction - test_dict['y'])**2
 
-    for i in range(0, endSize):
-        print(i, end=" ", flush=True)
-        bag_of_trees.add_iteration()
-        iteration_results.append({"iteration": i+1, \
-            "train error":np_train_errors[i], "test error":np_test_errors[i] }, ignore_index=True)
+        variances[i] = 1/99 * ((predictions_array - mean_prediction)**2).sum()
 
-    iteration_results.to_csv(outFile)
 
-    print("finished run " + str(startSize) + " " + str(endSize) + " " + outFile)
+    print("Average bias for single tree learner = " + str(bias_terms.mean()) + " Average variance for single tree learner = " + str(variances.mean()))
+
+    for i, test in bank_frame_test.iterrows():
+        test_dict = test.to_dict()
+
+        for j, tree in zip(range(100), tree_bags):
+            predictions_array[j] = tree.getLabel(test_dict)
+
+        mean_prediction:float = predictions_array.mean()
+        bias_terms[i] = (mean_prediction - test_dict['y'])**2
+
+        variances[i] = 1/99 * ((predictions_array - mean_prediction)**2).sum()
+
+    print("Average bias for bagged learner = " + str(bias_terms.mean()) + " Average variance for bagged learner = " + str(variances.mean()))
+
+    print("finished script at: ", datetime.now().time())

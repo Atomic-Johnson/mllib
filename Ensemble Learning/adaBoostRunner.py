@@ -1,5 +1,6 @@
 import pandas as df
 from adaboost import boostedTree
+import matplotlib.pyplot as plt
 from pandas.core.frame import DataFrame
 
 def getError(dt, test_set: DataFrame, label_column: str):
@@ -59,16 +60,34 @@ print("starting run")
 for i in range(1, 501):
     print(i, end=" ", flush=True)
     booster.add_iteration()
-    iteration_results.append({"iteration":i, \
-         "train error":getError(booster,bank_frame_train,"y"), "test error":getError(booster,bank_frame_test,"y") }, ignore_index=True)
+    test_error = getError(booster,bank_frame_test,"y")
+    train_error = getError(booster,bank_frame_train,"y")
+    iteration_results = iteration_results.append({"iteration":i, \
+         "train error":train_error, "test error":test_error }, ignore_index=True)
 
 print("Evaluating stumps")
 for i, tree in zip(range(1,501), booster.trees):
     print(i, end=" ", flush=True)
-    stump_results.append({"stump":i, "train error":getError(tree,bank_frame_train,"y"), \
+    stump_results = stump_results.append({"stump":i, "train error":getError(tree,bank_frame_train,"y"), \
         "test error":getError(tree,bank_frame_test,"y") }, ignore_index=True)
 
 iteration_results.to_excel("iteration_errors.xlsx")
 stump_results.to_excel("stump_errors.xlsx")
+
+plt.plot(iteration_results["train error"])
+plt.plot(iteration_results["test error"])
+plt.legend(["train error", "test error"])
+plt.xlabel("number of trees")
+plt.ylabel("error")
+plt.title("error by number of trees")
+plt.show()
+
+plt.plot(stump_results["train error"])
+plt.plot(stump_results["test error"])
+plt.legend(["train error", "test error"])
+plt.xlabel("tree")
+plt.ylabel("error")
+plt.title("error for each tree in the boost set")
+plt.show()
 
 

@@ -1,0 +1,6 @@
+Random Forest
+Average bias for single tree learner = 0.45760416000000004 Average variance for single tree learner = 0.32477963636363644
+Average bias for bagged learner = 0.48347551999999994 Average variance for bagged learner = 0.03923684848484849
+
+bagged treeAverage bias for single tree learner = 0.49210592 Average variance for single tree learner = 0.3393677575757576
+Average bias for bagged learner = 0.5046360000000001 Average variance for bagged learner = 0.17261010101010102

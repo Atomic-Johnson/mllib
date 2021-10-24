@@ -6,28 +6,32 @@ import numpy as np
 import multiprocessing as mp
 from pandas.core.frame import DataFrame
 
-def _buildATree(training_data: DataFrame, output_column: str, schema: dict, queue:mp.Queue):
-    tempTree = DecisionTree(training_data, output_column, schema)
+def _buildATree(training_data: DataFrame, sample_size, output_column: str, schema: dict, queue):
+    bootstrap = training_data.sample(sample_size, replace=True)
+    tempTree = DecisionTree(bootstrap, output_column,  schema=schema)
+    #print("added a tree")
     queue.put(tempTree, block=True, timeout=3)
-    queue.close()
-    print("added a tree")
+    #queue.close()
+    
 
 class BaggedTree:
 
     def add_iterations(self, T):
-        lock = mp.Lock()
+        print("cpu cores=" + str(mp.cpu_count()))
         procs = []
-        treeQueue = mp.Queue(maxsize=75) 
+        manager = mp.Manager()
+        #treeQueue = mp.Queue(maxsize=75) 
+        treeQueue = manager.Queue()
         for i in range(0,T):
             treeBuilder = mp.Process(target=_buildATree, \
-                args=(self.training_data.sample(self.sample_size, replace=True), self.output_column, self.schema, treeQueue))
+                args=(self.training_data, self.sample_size, self.output_column, self.schema, treeQueue))
             
             procs.append(treeBuilder)
             treeBuilder.start()
             if not treeQueue.empty():
                 self.trees.append(treeQueue.get())
-                
-            while len(procs) >= mp.cpu_count():
+
+            while len(procs) > mp.cpu_count():
                 oldest_proc = procs.pop(0)
                 oldest_proc.join()
 

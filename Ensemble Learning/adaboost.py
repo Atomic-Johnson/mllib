@@ -6,7 +6,7 @@ import math as m
 import numpy as np
 from pandas.core.frame import DataFrame
 
-MAX_TREE_DEPTH = 2
+MAX_TREE_DEPTH = 1
 WEIGHTS = 'weights'
 DEBUG = False
 
@@ -26,6 +26,8 @@ class boostedTree:
 
         #step 2 get error and alpha
         Et = self.__getError(temp_tree)
+        if Et == 0:
+            print("WARNING: Et is zero")
         alpha = 0.5 *  m.log((1-Et) / Et)
         
         #step 3 update weights
@@ -36,7 +38,7 @@ class boostedTree:
             self.training_data.at[i, WEIGHTS] = Dt1
             self.Zt = self.Zt + Dt1
 
-        self.training_data[WEIGHTS] = self.training_data[WEIGHTS].div(self.Zt)
+        #self.training_data[WEIGHTS] = self.training_data[WEIGHTS].div(self.Zt)
 
 
         #step 4 add new tree and alpha to list
@@ -67,7 +69,7 @@ class boostedTree:
             training_data[WEIGHTS] =  1/self.Zt
         
 
-        self.training_data = training_data
+        self.training_data: DataFrame = training_data
         self.trees: List(DecisionTree) = []
 
         for i in range(0,T):
