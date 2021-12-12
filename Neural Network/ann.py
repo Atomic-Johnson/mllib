@@ -47,8 +47,18 @@ class ann:
         #     else:
         #         self.dldw_01[i] = weird_Dz_vector * 1
         
-
+    
     def __init__(self, training_data: DataFrame, output_column:str, iterations = 500, randomW = True, L1size = 3, L2size = 3) -> None:
+        """Constructor for ANN
+
+        Args:
+            training_data (DataFrame): training data
+            output_column (str): the column in training_data that represents the output,
+            iterations (int, optional): number of epochs to run. Defaults to 500.
+            randomW (bool, optional): Initializes layer weights to zero when False. Defaults to True.
+            L1size (int, optional): Number of nodes for first layer. Defaults to 3.
+            L2size (int, optional): Number of nodes for second layer. Defaults to 3.
+        """
         self.training_data: DataFrame = training_data.copy(deep=True)
         #self.training_data.insert(0, 'bias', 1) #add ones for the bias calculation
         self.train_data_noY = self.training_data.drop(output_column, axis=1)
