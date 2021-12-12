@@ -80,3 +80,14 @@ def __init__(self, training_data: DataFrame, T, feature_sample_size:int, output_
 ```
 
  It also contains a getLabelsUpToT function like the bagging library above
+ 
+ # Perceptron Algorithms
+ These algorithms can be tested by running the run.sh file in the Perceptron directory. That script must be run from the Perceptron directory. There are three classes: Averaged_Perceptron, Perceptron, and Voted_Perceptron and they exist in similarly named python files. They each have identical interfaces to their constructors and other methods as listed below.
+ 
+ ```python
+ def __init__(self, training_data: DataFrame, output_column: str, epochs, r = 0.5) -> None:
+ def get_label(self, row: Series):
+ def add_epoch(self):
+ ```
+ 
+ The add_epoch function allow you manually add epochs to the perceptron and check the performance of the model at each epoch. However, if you do this, you should specify epochs=0 inyour constructor. This is how I evaluate the performance of the different perceptrons at different epochs in perceptron_results.py which is run from run.sh
