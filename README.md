@@ -91,3 +91,37 @@ def __init__(self, training_data: DataFrame, T, feature_sample_size:int, output_
  ```
  
  The add_epoch function allow you manually add epochs to the perceptron and check the performance of the model at each epoch. However, if you do this, you should specify epochs=0 inyour constructor. This is how I evaluate the performance of the different perceptrons at different epochs in perceptron_results.py which is run from run.sh
+ 
+ #SVM Algorithms
+ These algorithms can be tested by running the run.sh file in the SVM directory. That script must be run from the SVM directory. There are two classes for this algorithm PrimalSVM and DualSVM. The DualSVM class also supports the use of a Gaussian kernel by setting useGaussKernel to True. PrimalSVM can select 2 different learning rate functions by setting the parameter gammaFunc to 'A' or 'B' in the constructor where the character passed in corresponds to that sub-problem of the homework. Each SVM can make a prediction by calling their get_label function which takes a pandas Series representing a single example from a data set. The constructor headers are listed below for reference.
+ ```python
+ class PrimalSVM():
+ def __init__(self, training_data: DataFrame, output_column: str, epochs, C = 0.5, gammaFunc = 'A', do_objective_output = False) -> None:
+ #setting do_objective_output to True will add a list of outputs of the objective at each epoch. Used for testing convergence.
+```
+```python
+def __init__(self, training_data: DataFrame, output_column: str, C = 0.5, useGaussKernel=False, gamma = 1) -> None:
+#gamma is initial learning rate
+```
+
+#Linear Regression Algorithm
+This algorithm can be tested by running the run.sh file in the Linear Regression directory. That script must be run from the Linear Regression directory. There is class called lms in lms.py. It's interface is essentially the same as that for the SVM with a few exceptions in the constructor. The constructor parameters do_stochastic_descent and adjustRate that specify whether to do stochastic gradient descent or normal gradient descent and whether or not to automatically adjust the learning rate based on convergence.
+```python
+def __init__(self, training_data: DataFrame, output_column:str, do_stochastic_descent: bool, iterations = 500, rate = 1, adjustRate: bool = True) -> None:
+```
+
+#Neural Network Algorithm
+This algorithm can be tested by running the run.sh file in the Neural Network directory. That script must be run from that directory. An explanation of the construction is provided with the code snippet below with a docstring included. The algorithm can be evaluated by calling get_prediction with the same parameters as the get_label function for the SVM.
+```python
+    def __init__(self, training_data: DataFrame, output_column:str, iterations = 500, randomW = True, L1size = 3, L2size = 3) -> None:
+        """Constructor for ANN
+
+        Args:
+            training_data (DataFrame): training data
+            output_column (str): the column in training_data that represents the output,
+            iterations (int, optional): number of epochs to run. Defaults to 500.
+            randomW (bool, optional): Initializes layer weights to zero when False. Defaults to True.
+            L1size (int, optional): Number of nodes for first layer. Defaults to 3.
+            L2size (int, optional): Number of nodes for second layer. Defaults to 3.
+        """
+```
